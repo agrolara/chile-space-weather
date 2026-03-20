@@ -22,6 +22,7 @@
   <div id="map"></div>
   <div id="info">
     <h1>Chile Monitor</h1>
+    <div class="panel"><h2>Clima Santiago</h2><div id="clima-content">⏳ Cargando...</div></div>
     <div class="panel"><h2>Clima Espacial</h2><div id="sw-content">⏳ Cargando...</div></div>
     <div class="panel"><h2>Sismos</h2><div class="stats" id="quake-stats"></div><ul id="quake-list"></ul></div>
     <div class="panel"><h2>Volcanes</h2><ul id="volcano-list"></ul></div>
@@ -39,35 +40,44 @@
 
     async function loadData() {
       try {
-        const [sismosRes, swRes, volcanesRes] = await Promise.all([
-          fetch('./data/sismos.json').then(r => {
-            console.log('sismos status', r.status);
-            return r.json();
-          }),
-          fetch('./data/space-weather.json').then(r => {
-            console.log('space-weather status', r.status);
-            return r.json();
-          }),
-          fetch('./data/volcanes.json').then(r => {
-            console.log('volcanes status', r.status);
-            return r.json();
-          }),
+        const [sismosRes, swRes, volcanesRes, climaRes] = await Promise.all([
+          fetch('./data/sismos.json').then(r => r.json()),
+          fetch('./data/space-weather.json').then(r => r.json()),
+          fetch('./data/volcanes.json').then(r => r.json()),
+          fetch('./data/clima_santiago.json').then(r => r.json()),
         ]);
 
         const sismos = sismosRes.sismos || [];
         const sw = swRes || {};
         const volcanes = volcanesRes.volcanes || [];
+        const clima = climaRes;
 
-        console.log('Datos cargados:', { sismos: sismos.length, sw, volcanes: volcanes.length });
+        console.log('Datos:', { sismos: sismos.length, volcanes: volcanes.length, clima: !!clima, sw: sw.kpIndex });
+
+        // Clima Santiago
+        if (clima) {
+          const cond = clima.description || 'N/A';
+          const temp = clima.temp_c != null ? `${clima.temp_c}°C` : 'N/A';
+          const humedad = clima.humidity ? `${clima.humidity}%` : 'N/A';
+          const viento = clima.wind_kph ? `${clima.wind_kph} km/h ${clima.wind_dir || ''}` : 'N/A';
+          const uv = clima.uv != null ? `UV ${clima.uv}` : 'N/A';
+          document.getElementById('clima-content').innerHTML = `
+            <div class="stat">Temperatura: ${temp} (Sensación: ${clima.feels_like_c||'?'}°C)</div>
+            <div class="stat">Condición: ${cond}</div>
+            <div class="stat">Humedad: ${humedad}</div>
+            <div class="stat">Viento: ${viento}</div>
+            <div class="stat">UV: ${uv}</div>
+            <div class="stat">Visibilidad: ${clima.visibility_km||'?'} km</div>
+          `;
+        } else {
+          document.getElementById('clima-content').innerHTML = '<div class="error">Clima no disponible</div>';
+        }
 
         // Clima Espacial
         const kp = sw.kpIndex != null ? sw.kpIndex.toFixed(1) : 'N/A';
         const grade = sw.grade || 'G0';
         let swHTML = `<div class="stat">KP: ${kp} (${grade})</div>`;
-        if (sw.alert) {
-          swHTML += `<div class="error">${sw.alert}</div>`;
-        }
-        // Formato seguro de fecha
+        if (sw.alert) swHTML += `<div class="error">${sw.alert}</div>`;
         let updated = '--';
         if (sw.updated) {
           try {
