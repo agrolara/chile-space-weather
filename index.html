@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chile Space Weather</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body { margin:0; background:#0a0a0f; color:#d0d0d0; font-family:system-ui,sans-serif; overflow:hidden; }
+    #map { height:100vh; width:100%; }
+    #info { position:absolute; top:10px; right:10px; width:380px; max-height:90vh; background:rgba(10,10,16,0.94); padding:14px; border-radius:10px; overflow-y:auto; font-size:13px; z-index:999; }
+    h1 { margin:0 0 12px; color:#6cf; font-size:20px; }
+    .panel { background:#14141c; padding:12px; margin-bottom:12px; border-radius:8px; border-left:4px solid #6cf; }
+    .panel h2 { margin:0 0 8px; color:#8cf; font-size:15px; }
+    .stat { background:#1f1f2e; padding:5px 10px; border-radius:5px; font-size:12px; margin:4px 0; }
+    .error { color:#f88; }
+    ul { list-style:none; padding:0; margin:0; }
+    li { margin:4px 0; font-size:12px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="info">
+    <h1>Chile Monitor</h1>
+    <div class="panel"><h2>Clima Espacial</h2><div id="sw-content">⏳ Cargando...</div></div>
+    <div class="panel"><h2>Sismos</h2><div class="stats" id="quake-stats"></div><ul id="quake-list"></ul></div>
+    <div class="panel"><h2>Volcanes</h2><ul id="volcano-list"></ul></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([-35.6751, -71.5430], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; OSM'
+    }).addTo(map);
+
+    const quakeMarkers = L.layerGroup().addTo(map);
+    const volcanoMarkers = L.layerGroup().addTo(map);
+
+    async function loadData() {
+      try {
+        const [sismosRes, swRes, volcanesRes] = await Promise.all([
+          fetch('./data/sismos.json').then(r => r.json()),
+          fetch('./data/space-weather.json').then(r => r.json()),
+          fetch('./data/volcanes.json').then(r => r.json()),
+        ]);
+
+        const sismos = sismosRes.sismos || [];
+        const sw = swRes || {};
+        const volcanes = swRes.volcanes || [];
+
+        // Clima Espacial
+        document.getElementById('sw-content').innerHTML = `
+          <div class="stat">KP: ${sw.kpIndex?.toFixed(1)} (${sw.grade||'G0'})</div>
+          ${sw.alert ? `<div class="error">${sw.alert}</div>` : ''}
+          <div class="stat">Actualizado: ${new Date(sw.updated).toLocaleTimeString('es-CL')}</div>
+        `;
+
+        // Sismos
+        const qlist = document.getElementById('quake-list');
+        const qstats = document.getElementById('quake-stats');
+        qlist.innerHTML = '';
+        if (sismos.length === 0) {
+          qlist.innerHTML = '<li style="color:#aaa">No hay sismos recientes</li>';
+          qstats.innerHTML = '<span class="stat">Sin sismos</span>';
+        } else {
+          sismos.slice(0,15).forEach(q => {
+            const color = q.mag >= 6.5 ? 'red' : q.mag >= 5.5 ? 'orange' : q.mag >= 4.5 ? 'yellow' : 'green';
+            qlist.innerHTML += `<li style="color:${color}">M${q.mag.toFixed(1)} - ${q.place}</li>`;
+          });
+          qstats.innerHTML = `<span class="stat">${sismos.length} sismos</span>`;
+        }
+
+        // Volcanes
+        const vlist = document.getElementById('volcano-list');
+        vlist.innerHTML = '';
+        if (volcanes.length === 0) {
+          vlist.innerHTML = '<li style="color:#aaa">No hay volcanes activos</li>';
+        } else {
+          volcanes.forEach(v => {
+            const color = v.alerta === 'Rojo' ? 'red' : v.alerta === 'Naranja' ? 'orange' : v.alerta === 'Amarillo' ? 'yellow' : 'gray';
+            vlist.innerHTML += `<li><span style="color:${color}">●</span> ${v.nombre} (${v.alerta||'Normal'})</li>`;
+          });
+        }
+
+        // Mapas
+        quakeMarkers.clearLayers();
+        sismos.forEach(q => {
+          const color = q.mag >= 6.5 ? 'red' : q.mag >= 5.5 ? 'orange' : q.mag >= 4.5 ? 'yellow' : 'green';
+          L.circleMarker([q.lat, q.lng], { radius: 6, color, fillOpacity: 0.8 }).bindPopup(`<b>M${q.mag}</b><br>${q.place}`).addTo(quakeMarkers);
+        });
+
+        volcanoMarkers.clearLayers();
+        volcanes.forEach(v => {
+          const color = v.alerta === 'Rojo' ? 'red' : v.alerta === 'Naranja' ? 'orange' : v.alerta === 'Amarillo' ? 'yellow' : 'gray';
+          L.circleMarker([v.lat, v.lng], { radius: 8, color, fillOpacity: 0.8 }).bindPopup(`<b>${v.nombre}</b><br>Alerta: ${v.alerta}`).addTo(volcanoMarkers);
+        });
+
+      } catch(e) {
+        console.error(e);
+        document.getElementById('sw-content').innerHTML = '<div class="error">Error cargando datos</div>';
+      }
+    }
+    loadData();
+    setInterval(loadData, 60000);
+  </script>
+</body>
+</html>
