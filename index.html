@@ -40,21 +40,45 @@
     async function loadData() {
       try {
         const [sismosRes, swRes, volcanesRes] = await Promise.all([
-          fetch('./data/sismos.json').then(r => r.json()),
-          fetch('./data/space-weather.json').then(r => r.json()),
-          fetch('./data/volcanes.json').then(r => r.json()),
+          fetch('./data/sismos.json').then(r => {
+            console.log('sismos status', r.status);
+            return r.json();
+          }),
+          fetch('./data/space-weather.json').then(r => {
+            console.log('space-weather status', r.status);
+            return r.json();
+          }),
+          fetch('./data/volcanes.json').then(r => {
+            console.log('volcanes status', r.status);
+            return r.json();
+          }),
         ]);
 
         const sismos = sismosRes.sismos || [];
         const sw = swRes || {};
         const volcanes = volcanesRes.volcanes || [];
 
+        console.log('Datos cargados:', { sismos: sismos.length, sw, volcanes: volcanes.length });
+
         // Clima Espacial
-        document.getElementById('sw-content').innerHTML = `
-          <div class="stat">KP: ${sw.kpIndex?.toFixed(1)} (${sw.grade||'G0'})</div>
-          ${sw.alert ? `<div class="error">${sw.alert}</div>` : ''}
-          <div class="stat">Actualizado: ${new Date(sw.updated).toLocaleTimeString('es-CL')}</div>
-        `;
+        const kp = sw.kpIndex != null ? sw.kpIndex.toFixed(1) : 'N/A';
+        const grade = sw.grade || 'G0';
+        let swHTML = `<div class="stat">KP: ${kp} (${grade})</div>`;
+        if (sw.alert) {
+          swHTML += `<div class="error">${sw.alert}</div>`;
+        }
+        // Formato seguro de fecha
+        let updated = '--';
+        if (sw.updated) {
+          try {
+            const d = new Date(sw.updated.replace(' ', 'T'));
+            updated = d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+          } catch (e) {
+            updated = sw.updated;
+          }
+        }
+        swHTML += `<div class="stat">Actualizado: ${updated}</div>`;
+        document.getElementById('sw-content').innerHTML = swHTML;
 
         // Sismos
         const qlist = document.getElementById('quake-list');
@@ -86,14 +110,18 @@
         // Mapas
         quakeMarkers.clearLayers();
         sismos.forEach(q => {
-          const color = q.mag >= 6.5 ? 'red' : q.mag >= 5.5 ? 'orange' : q.mag >= 4.5 ? 'yellow' : 'green';
-          L.circleMarker([q.lat, q.lng], { radius: 6, color, fillOpacity: 0.8 }).bindPopup(`<b>M${q.mag}</b><br>${q.place}`).addTo(quakeMarkers);
+          if (q.lat && q.lng) {
+            const color = q.mag >= 6.5 ? 'red' : q.mag >= 5.5 ? 'orange' : q.mag >= 4.5 ? 'yellow' : 'green';
+            L.circleMarker([q.lat, q.lng], { radius: 6, color, fillOpacity: 0.8 }).bindPopup(`<b>M${q.mag}</b><br>${q.place}`).addTo(quakeMarkers);
+          }
         });
 
         volcanoMarkers.clearLayers();
         volcanes.forEach(v => {
-          const color = v.alerta === 'Rojo' ? 'red' : v.alerta === 'Naranja' ? 'orange' : v.alerta === 'Amarillo' ? 'yellow' : 'gray';
-          L.circleMarker([v.lat, v.lng], { radius: 8, color, fillOpacity: 0.8 }).bindPopup(`<b>${v.nombre}</b><br>Alerta: ${v.alerta}`).addTo(volcanoMarkers);
+          if (v.lat && v.lng) {
+            const color = v.alerta === 'Rojo' ? 'red' : v.alerta === 'Naranja' ? 'orange' : v.alerta === 'Amarillo' ? 'yellow' : 'gray';
+            L.circleMarker([v.lat, v.lng], { radius: 8, color, fillOpacity: 0.8 }).bindPopup(`<b>${v.nombre}</b><br>Alerta: ${v.alerta}`).addTo(volcanoMarkers);
+          }
         });
 
       } catch(e) {
