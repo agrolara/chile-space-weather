@@ -1,0 +1,40 @@
+{
+  "volcanes": [
+    {
+      "nombre": "Villarrica",
+      "lat": -39.292,
+      "lng": -71.974,
+      "alerta": "Amarillo",
+      "ultima": "2026-03-15"
+    },
+    {
+      "nombre": "Calbuco",
+      "lat": -41.33,
+      "lng": -72.62,
+      "alerta": "Verde",
+      "ultima": "2025-12-10"
+    },
+    {
+      "nombre": "Llaima",
+      "lat": -38.75,
+      "lng": -71.25,
+      "alerta": "Amarillo",
+      "ultima": "2026-03-12"
+    },
+    {
+      "nombre": "Chaitén",
+      "lat": -42.83,
+      "lng": -72.65,
+      "alerta": "Verde",
+      "ultima": "2025-06-20"
+    },
+    {
+      "nombre": "Copahue",
+      "lat": -37.85,
+      "lng": -71.15,
+      "alerta": "Amarillo",
+      "ultima": "2026-03-05"
+    }
+  ],
+  "generated": "2026-03-20T19:15:45.088Z"
+}
