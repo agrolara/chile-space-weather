@@ -1,0 +1,13 @@
+{
+  "name": "chile-space-weather",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "poll": "node poll.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "date-fns": "^2.30.0"
+  }
+}
