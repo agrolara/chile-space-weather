@@ -1,15 +1,45 @@
 {
   "sismos": [
     {
-      "id": "boostr-1774054278580",
-      "mag": 2.7,
-      "place": "113 km al noreste de Socaire",
-      "time": 1774041234000,
-      "lat": -23.01,
-      "lng": -66.98,
-      "depth": 238,
-      "info_url": "https://sismologia.cl/sismicidad/informes/2026/03/352715.html"
+      "id": "us6000shr1",
+      "mag": 4.5,
+      "place": "31 km NE of Diego de Almagro, Chile",
+      "time": 1773991951212,
+      "lat": -26.1917,
+      "lng": -69.8237,
+      "depth": 106.016,
+      "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000shr1"
+    },
+    {
+      "id": "us6000shtc",
+      "mag": 4.4,
+      "place": "65 km WSW of San Antonio de los Cobres, Argentina",
+      "time": 1774012410193,
+      "lat": -24.5179,
+      "lng": -66.8758,
+      "depth": 219.301,
+      "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000shtc"
+    },
+    {
+      "id": "us6000shvi",
+      "mag": 4.6,
+      "place": "52 km WNW of La Ligua, Chile",
+      "time": 1774020645163,
+      "lat": -32.1967,
+      "lng": -71.6987,
+      "depth": 57.462,
+      "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000shvi"
+    },
+    {
+      "id": "us6000shxy",
+      "mag": 4.7,
+      "place": "94 km WNW of Puerto, Chile",
+      "time": 1774037212112,
+      "lat": -19.9972,
+      "lng": -71.0226,
+      "depth": 11.317,
+      "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000shxy"
     }
   ],
-  "generated": "2026-03-21T00:51:18.780Z"
+  "generated": "2026-03-21T00:52:21.283Z"
 }
