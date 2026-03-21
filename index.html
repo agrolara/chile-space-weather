@@ -38,13 +38,60 @@
     const quakeMarkers = L.layerGroup().addTo(map);
     const volcanoMarkers = L.layerGroup().addTo(map);
 
+    // Traducción de códigos Open-Meteo WMO adescripciones en español
+    function weatherCodeDesc(code) {
+      const codes = {
+        0: 'Despejado',
+        1: 'Mayormente despejado',
+        2: 'Parcialmente nublado',
+        3: 'Nublado',
+        45: 'Niebla',
+        48: 'Niebla escarchada',
+        51: 'Llovizna ligera',
+        53: 'Llovizna moderada',
+        55: 'Llovizna densa',
+        56: 'Llovizna helada ligera',
+        57: 'Llovizna helada densa',
+        61: 'Lluvia ligera',
+        63: 'Lluvia moderada',
+        65: 'Lluvia fuerte',
+        66: 'Lluvia helada ligera',
+        67: 'Lluvia helada fuerte',
+        71: 'Nieve ligera',
+        73: 'Nieve moderada',
+        75: 'Nieve fuerte',
+        77: 'Granizo',
+        80: 'Chubascos ligeros',
+        81: 'Chubascos moderados',
+        82: 'Chubascos fuertes',
+        85: 'Chubascos de nieve',
+        86: 'Chubascos de nieve fuertes',
+        95: 'Tormenta eléctrica',
+        96: 'Tormenta con granizo pequeño',
+        99: 'Tormenta con granizo fuerte',
+      };
+      return codes[code] || 'Condición desconocida';
+    }
+
     async function loadData() {
       try {
         const [sismosRes, swRes, volcanesRes, climaRes] = await Promise.all([
-          fetch('./data/sismos.json').then(r => r.json()),
-          fetch('./data/space-weather.json').then(r => r.json()),
-          fetch('./data/volcanes.json').then(r => r.json()),
-          fetch('./data/clima_santiago.json').then(r => r.json()),
+          fetch('./data/sismos.json').then(r => {
+            console.log('sismos status', r.status);
+            return r.json();
+          }),
+          fetch('./data/space-weather.json').then(r => {
+            console.log('space-weather status', r.status);
+            return r.json();
+          }),
+          fetch('./data/volcanes.json').then(r => {
+            console.log('volcanes status', r.status);
+            return r.json();
+          }),
+          fetch('./data/clima_santiago.json').then(r => {
+            console.log('clima_santiago status', r.status);
+            return r.json();
+          }),
         ]);
 
         const sismos = sismosRes.sismos || [];
@@ -52,22 +99,29 @@
         const volcanes = volcanesRes.volcanes || [];
         const clima = climaRes;
 
-        console.log('Datos:', { sismos: sismos.length, volcanes: volcanes.length, clima: !!clima, sw: sw.kpIndex });
+        console.log('Datos cargados:', { 
+          sismos: sismos.length, 
+          volcanes: volcanes.length, 
+          clima: clima, 
+          sw: sw.kpIndex 
+        });
 
-        // Clima Santiago
+        // Clima Santiago (Open-Meteo)
         if (clima) {
-          const cond = clima.description || 'N/A';
           const temp = clima.temp_c != null ? `${clima.temp_c}°C` : 'N/A';
-          const humedad = clima.humidity ? `${clima.humidity}%` : 'N/A';
-          const viento = clima.wind_kph ? `${clima.wind_kph} km/h ${clima.wind_dir || ''}` : 'N/A';
+          const viento = clima.wind_kph ? `${clima.wind_kph} km/h` : 'N/A';
+          const dir = clima.wind_dir || 'N/A';
+          const desc = weatherCodeDesc(clima.code) || 'N/A';
+          const humedad = clima.humidity != null ? `${clima.humidity}%` : 'N/A';
           const uv = clima.uv != null ? `UV ${clima.uv}` : 'N/A';
+          const vis = clima.visibility != null ? `${clima.visibility} km` : 'N/A';
           document.getElementById('clima-content').innerHTML = `
-            <div class="stat">Temperatura: ${temp} (Sensación: ${clima.feels_like_c||'?'}°C)</div>
-            <div class="stat">Condición: ${cond}</div>
+            <div class="stat">Temperatura: ${temp}</div>
+            <div class="stat">Condición: ${desc}</div>
             <div class="stat">Humedad: ${humedad}</div>
-            <div class="stat">Viento: ${viento}</div>
+            <div class="stat">Viento: ${viento} (${dir}°)</div>
             <div class="stat">UV: ${uv}</div>
-            <div class="stat">Visibilidad: ${clima.visibility_km||'?'} km</div>
+            <div class="stat">Visibilidad: ${vis}</div>
           `;
         } else {
           document.getElementById('clima-content').innerHTML = '<div class="error">Clima no disponible</div>';
