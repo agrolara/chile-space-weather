@@ -1,7 +1,7 @@
 {
   "sismos": [
     {
-      "id": "boostr-1774054109142",
+      "id": "boostr-1774054278580",
       "mag": 2.7,
       "place": "113 km al noreste de Socaire",
       "time": 1774041234000,
@@ -11,5 +11,5 @@
       "info_url": "https://sismologia.cl/sismicidad/informes/2026/03/352715.html"
     }
   ],
-  "generated": "2026-03-21T00:48:29.823Z"
+  "generated": "2026-03-21T00:51:18.780Z"
 }
